@@ -1,16 +1,22 @@
 package com.crypto.demo.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.core.os.bundleOf
 import com.crypto.demo.domain.model.CurrencyListType
 import com.crypto.demo.ui.components.CurrencyListScreen
 import com.crypto.demo.ui.theme.CurrencyDemoTheme
@@ -20,6 +26,16 @@ import dagger.hilt.android.AndroidEntryPoint
 class CurrencyListFragment : Fragment() {
 
     private val viewModel: CurrencyListViewModel by viewModels()
+    private var searchFocusListener: SearchFocusListener? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        searchFocusListener = when {
+            parentFragment is SearchFocusListener -> parentFragment as SearchFocusListener
+            context is SearchFocusListener -> context
+            else -> null
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,10 +50,30 @@ class CurrencyListFragment : Fragment() {
                     state = state,
                     onQueryChange = viewModel::onSearchQueryChanged,
                     onActivateSearch = viewModel::onSearchActivated,
-                    onCloseSearch = viewModel::onCloseSearch
+                    onCloseSearch = viewModel::onCloseSearch,
+                    onSearchFocusChanged = { isFocused ->
+                        searchFocusListener?.onCurrencySearchFocusChanged(isFocused)
+                    },
+                    modifier = Modifier
+                        .windowInsetsPadding(WindowInsets.systemBars)
+                        .imePadding()
                 )
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        searchFocusListener?.onCurrencySearchFocusChanged(false)
+    }
+
+    override fun onDetach() {
+        searchFocusListener = null
+        super.onDetach()
+    }
+
+    interface SearchFocusListener {
+        fun onCurrencySearchFocusChanged(hasFocus: Boolean)
     }
 
     companion object {

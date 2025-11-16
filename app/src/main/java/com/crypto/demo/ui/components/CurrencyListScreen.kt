@@ -20,7 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,15 +37,20 @@ fun CurrencyListScreen(
     onQueryChange: (String) -> Unit,
     onActivateSearch: () -> Unit,
     onCloseSearch: () -> Unit,
+    onSearchFocusChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     BackHandler(enabled = state.isSearchActive || state.searchQuery.isNotBlank()) {
         onCloseSearch()
     }
 
-    Surface(modifier = modifier.fillMaxSize()) {
+    LaunchedEffect(state.isSearchActive) {
+        onSearchFocusChanged(state.isSearchActive)
+    }
+
+    Surface(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(16.dp)
                 .testTag("currencyListColumn")
@@ -99,7 +106,11 @@ private fun CurrencySearchField(
             }
             onQueryChanged(it)
         },
-        modifier = modifier,
+        modifier = modifier.onFocusChanged { focusState ->
+            if (!active && focusState.isFocused) {
+                onActivate()
+            }
+        },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Search, contentDescription = null)
         },
