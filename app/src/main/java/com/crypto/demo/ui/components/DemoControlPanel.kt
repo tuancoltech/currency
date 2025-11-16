@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.crypto.demo.R
@@ -41,8 +42,8 @@ fun DemoControlPanel(
 
     LaunchedEffect(state.message?.id) {
         state.message?.let {
-            snackbarHostState.showSnackbar(it.text)
             onMessageConsumed()
+            snackbarHostState.showSnackbar(it.text)
         }
     }
 
@@ -50,6 +51,7 @@ fun DemoControlPanel(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag("demoControlPanel")
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
@@ -83,9 +85,16 @@ fun DemoControlPanel(
                 )
             }
             if (state.isProcessing) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("demoProgress")
+                )
             }
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.testTag("demoSnackbarHost")
+            )
         }
     }
 }

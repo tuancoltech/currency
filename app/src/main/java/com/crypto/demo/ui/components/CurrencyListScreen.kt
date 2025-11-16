@@ -21,6 +21,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,12 @@ fun CurrencyListScreen(
     }
 
     Surface(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .testTag("currencyListColumn")
+        ) {
             Text(
                 text = state.title,
                 style = MaterialTheme.typography.headlineSmall,
@@ -54,7 +60,9 @@ fun CurrencyListScreen(
                 onQueryChanged = onQueryChange,
                 onActivate = onActivateSearch,
                 onClose = onCloseSearch,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("currencySearchField")
             )
             if (state.isEmpty) {
                 EmptyState(
@@ -116,7 +124,9 @@ private fun CurrencyList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("currencyList"),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
         items(items, key = { it.id }) { item ->
@@ -127,9 +137,11 @@ private fun CurrencyList(
 
 @Composable
 private fun CurrencyRow(item: CurrencyRowItem) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 12.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+    ) {
         Text(text = item.title, style = MaterialTheme.typography.titleMedium)
         Text(
             text = "${item.symbol} - ${item.subtitle}",
@@ -141,7 +153,7 @@ private fun CurrencyRow(item: CurrencyRowItem) {
 
 @Composable
 private fun EmptyState(modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag("currencyEmptyState")) {
         Text(
             text = stringResource(id = R.string.empty_state_message),
             style = MaterialTheme.typography.bodyLarge,

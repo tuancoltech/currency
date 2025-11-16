@@ -36,17 +36,12 @@ class CurrencyRepositoryImpl @Inject constructor(
             .map { entities -> entities.map { it.toDomain() } }
     }
 
-    override suspend fun seedCurrencies(data: List<CurrencyInfo>) {
-        val entities = data.map { it.toEntity() }
-        withContext(ioDispatcher) {
-            dao.insertCurrencies(entities)
-        }
+    override suspend fun seedCurrencies(data: List<CurrencyInfo>) = withContext(ioDispatcher) {
+        dao.insertCurrencies(data.map { it.toEntity() })
     }
 
-    override suspend fun clearAll() {
-        withContext(ioDispatcher) {
-            dao.clearAll()
-        }
+    override suspend fun clearAll() = withContext(ioDispatcher) {
+        dao.clearAll()
     }
 
     override suspend fun isEmpty(): Boolean = withContext(ioDispatcher) {

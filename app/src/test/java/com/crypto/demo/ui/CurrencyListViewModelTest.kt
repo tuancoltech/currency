@@ -10,9 +10,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -22,10 +25,15 @@ class CurrencyListViewModelTest {
     @get:Rule
     val dispatcherRule = MainDispatcherRule()
 
-    private val repository = FakeCurrencyRepository()
+    private lateinit var repository: FakeCurrencyRepository
+
+    @Before
+    fun setup() {
+        repository = FakeCurrencyRepository()
+    }
 
     @Test
-    fun `search matches beginning of coin name`() = runTest {
+    fun searchMatchesBeginningOfCoinName() = runTest {
         repository.setData(
             listOf(
                 CurrencyInfo("ETH", "Ethereum", "ETH", null, CurrencyListType.CRYPTO),
@@ -44,7 +52,7 @@ class CurrencyListViewModelTest {
     }
 
     @Test
-    fun `search matches words with preceding space`() = runTest {
+    fun searchMatchesWordsWithPrecedingSpace() = runTest {
         repository.setData(
             listOf(
                 CurrencyInfo("ETC", "Ethereum Classic", "ETC", null, CurrencyListType.CRYPTO),
@@ -64,7 +72,7 @@ class CurrencyListViewModelTest {
     }
 
     @Test
-    fun `search matches symbol prefix`() = runTest {
+    fun searchMatchesSymbolPrefix() = runTest {
         repository.setData(
             listOf(
                 CurrencyInfo("ETH", "Ethereum", "ETH", null, CurrencyListType.CRYPTO),
@@ -84,13 +92,117 @@ class CurrencyListViewModelTest {
         }
     }
 
+    @Test
+    fun titleDefaultsToCryptoWhenDatasetMissingOrInvalid() = runTest {
+        val viewModel = viewModelWithRawArg("INVALID")
+        assertEquals("Crypto Currency", viewModel.uiState.value.title)
+    }
+
+    @Test
+    fun fiatDatasetExposesFiatTitle() = runTest {
+        val viewModel = viewModel(CurrencyListType.FIAT)
+        assertEquals("Fiat Currency", viewModel.uiState.value.title)
+    }
+
+    @Test
+    fun missingDatasetDefaultsToCryptoList() = runTest {
+        repository.setData(
+            listOf(
+                CurrencyInfo("BTC", "Bitcoin", "BTC", null, CurrencyListType.CRYPTO)
+            )
+        )
+        val viewModel = viewModelWithRawArg(null)
+
+        viewModel.uiState.test {
+            val initial = awaitItem()
+            assertEquals(CurrencyListType.CRYPTO, initial.selectedDataset)
+            this@runTest.advanceUntilIdle()
+            assertEquals(listOf(CurrencyListType.CRYPTO), repository.lastRequestedTypes)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun allDatasetObservesBothListTypes() = runTest {
+        repository.setData(
+            listOf(
+                CurrencyInfo("USD", "Dollar", "$", "USD", CurrencyListType.FIAT)
+            )
+        )
+        val viewModel = viewModel(CurrencyListType.ALL)
+
+        viewModel.uiState.test {
+            val initial = awaitItem()
+            assertEquals("Purchasable Currency", initial.title)
+            this@runTest.advanceUntilIdle()
+            assertEquals(
+                listOf(CurrencyListType.CRYPTO, CurrencyListType.FIAT),
+                repository.lastRequestedTypes
+            )
+            val state = awaitItem()
+            assertEquals(1, state.currencies.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun subtitleUsesCodeOrFallsBackToListType() = runTest {
+        repository.setData(
+            listOf(
+                CurrencyInfo("USD", "Dollar", "$", "USD", CurrencyListType.FIAT),
+                CurrencyInfo("ETH", "Ethereum", "ETH", null, CurrencyListType.CRYPTO),
+                CurrencyInfo("BBD", "Blank Code", "$", "", CurrencyListType.FIAT)
+            )
+        )
+        val viewModel = viewModel(CurrencyListType.ALL)
+
+        viewModel.uiState.test {
+            awaitItem()
+            val state = awaitItem()
+            val usd = state.currencies.first { it.id == "USD" }
+            val eth = state.currencies.first { it.id == "ETH" }
+            val bbd = state.currencies.first { it.id == "BBD" }
+            assertEquals("USD", usd.subtitle)
+            assertEquals(CurrencyListType.CRYPTO.name, eth.subtitle)
+            assertEquals(CurrencyListType.FIAT.name, bbd.subtitle)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun searchActivationAndCloseUpdateFlags() = runTest {
+        val viewModel = viewModel(CurrencyListType.CRYPTO)
+
+        viewModel.uiState.test {
+            val initial = awaitItem()
+            assertFalse(initial.isSearchActive)
+            viewModel.onSearchActivated()
+            assertTrue(awaitItem().isSearchActive)
+            viewModel.onSearchQueryChanged("BTC")
+            awaitItem()
+            viewModel.onCloseSearch()
+            val cleared = awaitItem()
+            assertEquals("", cleared.searchQuery)
+            assertFalse(cleared.isSearchActive)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModel(type: CurrencyListType): CurrencyListViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf(CurrencyListFragment.ARG_DATASET to type.name))
+        return viewModelWithRawArg(type.name)
+    }
+
+    private fun viewModelWithRawArg(raw: String?): CurrencyListViewModel {
+        val savedStateHandle = raw?.let {
+            SavedStateHandle(mapOf(CurrencyListFragment.ARG_DATASET to it))
+        } ?: SavedStateHandle()
         return CurrencyListViewModel(savedStateHandle, repository)
     }
 
     private class FakeCurrencyRepository : CurrencyRepository {
         private val items = MutableStateFlow<List<CurrencyInfo>>(emptyList())
+        var lastRequestedTypes: List<CurrencyListType> = emptyList()
+        var lastSearchTerm: String = ""
 
         fun setData(list: List<CurrencyInfo>) {
             items.value = list
@@ -100,6 +212,8 @@ class CurrencyListViewModelTest {
             listTypes: List<CurrencyListType>,
             searchTerm: String
         ): Flow<List<CurrencyInfo>> {
+            lastRequestedTypes = listTypes
+            lastSearchTerm = searchTerm
             val lowerQuery = searchTerm.lowercase()
             return items.map { list ->
                 list.filter { currency ->
