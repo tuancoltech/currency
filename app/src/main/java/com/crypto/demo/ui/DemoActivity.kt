@@ -1,17 +1,19 @@
 package com.crypto.demo.ui
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
+import androidx.core.view.isGone
 import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.crypto.demo.R
 import com.crypto.demo.domain.model.CurrencyListType
 import com.crypto.demo.ui.components.DemoControlPanel
@@ -20,19 +22,23 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class DemoActivity : AppCompatActivity() {
+class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListener {
 
     private val viewModel: DemoViewModel by viewModels()
     private var currentListType: CurrencyListType? = null
+    private lateinit var controlPanelComposeView: ComposeView
+    private var isSearchFocused: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         enableEdgeToEdge()
         setContentView(R.layout.activity_demo)
 
-        val composeView = findViewById<ComposeView>(R.id.controlPanelComposeView)
-        composeView.setContent {
+        controlPanelComposeView = findViewById(R.id.controlPanelComposeView)
+
+        controlPanelComposeView.setContent {
             CurrencyDemoTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 DemoControlPanel(
@@ -72,5 +78,11 @@ class DemoActivity : AppCompatActivity() {
                 CurrencyListFragment.FRAGMENT_TAG
             )
         }
+    }
+
+    override fun onCurrencySearchFocusChanged(hasFocus: Boolean) {
+        if (isSearchFocused == hasFocus) return
+        isSearchFocused = hasFocus
+        controlPanelComposeView.isGone = hasFocus
     }
 }
