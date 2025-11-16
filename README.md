@@ -1,5 +1,7 @@
 # Currency Demo
 
+![Coverage](https://img.shields.io/badge/coverage-100.00%25-brightgreen)
+
 Android sample project that showcases usages of a `CurrencyListFragment` using Kotlin, Jetpack Compose, Room, Hilt, and Coroutines.
 
 ## Project Highlights
@@ -17,6 +19,14 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
    ./gradlew test
    ```
 3. Open the project in Android Studio (Giraffe or newer) and run the `app` configuration on an emulator or device.
+
+## Test Coverage
+- Latest combined line coverage: <!-- COVERAGE:START -->100.00%<!-- COVERAGE:END -->
+- Generate the combined JVM + instrumentation coverage report:
+  ```bash
+  ./gradlew testDebugUnitTest connectedDebugAndroidTest jacocoTestReport
+  ```
+- Reports are written to `app/build/reports/jacoco/jacocoTestReport/html/index.html`.
 
 ## Tech Stack
 | Layer | Implementation |
