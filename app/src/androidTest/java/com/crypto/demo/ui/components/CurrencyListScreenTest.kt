@@ -37,7 +37,8 @@ class CurrencyListScreenTest {
                     state = state.value,
                     onQueryChange = { queries += it },
                     onActivateSearch = { searchActivated = true },
-                    onCloseSearch = { }
+                    onCloseSearch = { },
+                    onSearchFocusChanged = {}
                 )
             }
         }
@@ -79,7 +80,8 @@ class CurrencyListScreenTest {
                     state = state.value,
                     onQueryChange = {},
                     onActivateSearch = {},
-                    onCloseSearch = { closeCount++ }
+                    onCloseSearch = { closeCount++ },
+                    onSearchFocusChanged = {}
                 )
             }
         }

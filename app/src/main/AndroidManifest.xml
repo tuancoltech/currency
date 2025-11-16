@@ -13,7 +13,8 @@
         <activity
             android:name=".ui.DemoActivity"
             android:exported="true"
-            android:theme="@style/Theme.CurrencyDemo">
+            android:theme="@style/Theme.CurrencyDemo"
+            android:windowSoftInputMode="stateHidden|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
