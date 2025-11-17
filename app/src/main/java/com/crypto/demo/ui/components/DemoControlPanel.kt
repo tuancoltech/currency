@@ -22,9 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.crypto.demo.R
 import com.crypto.demo.domain.model.CurrencyListType
 import com.crypto.demo.ui.DemoUiState
+import com.crypto.demo.ui.theme.CurrencyDemoTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -112,5 +114,32 @@ private fun DatasetButton(
     }
     FilledTonalButton(onClick = onClick, colors = colors) {
         Text(text = label)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun DemoControlPanelPreview() {
+    CurrencyDemoTheme {
+        DemoControlPanel(
+            state = DemoUiState(selectedListType = CurrencyListType.ALL),
+            onClear = {},
+            onSeed = {},
+            onShowCrypto = {},
+            onShowFiat = {},
+            onShowAll = {},
+            onMessageConsumed = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DatasetButtonPreview() {
+    CurrencyDemoTheme {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
+            DatasetButton(label = "Crypto", selected = true, onClick = {})
+            DatasetButton(label = "Fiat", selected = false, onClick = {})
+        }
     }
 }

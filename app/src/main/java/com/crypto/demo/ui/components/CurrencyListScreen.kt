@@ -27,9 +27,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.crypto.demo.R
 import com.crypto.demo.ui.CurrencyListUiState
 import com.crypto.demo.ui.CurrencyRowItem
+import com.crypto.demo.ui.theme.CurrencyDemoTheme
 
 @Composable
 fun CurrencyListScreen(
@@ -170,5 +172,70 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+private val previewCurrencyItems = listOf(
+    CurrencyRowItem(id = "BTC", title = "Bitcoin", subtitle = "Crypto", symbol = "₿"),
+    CurrencyRowItem(id = "ETH", title = "Ethereum", subtitle = "Crypto", symbol = "Ξ")
+)
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+private fun CurrencyListScreenPreview() {
+    CurrencyDemoTheme {
+        CurrencyListScreen(
+            state = CurrencyListUiState(
+                title = "Crypto Currency",
+                currencies = previewCurrencyItems
+            ),
+            onQueryChange = {},
+            onActivateSearch = {},
+            onCloseSearch = {},
+            onSearchFocusChanged = {},
+            modifier = Modifier
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CurrencySearchFieldPreview() {
+    CurrencyDemoTheme {
+        CurrencySearchField(
+            value = "BTC",
+            active = true,
+            onQueryChanged = {},
+            onActivate = {},
+            onClose = {},
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Preview(showBackground = true, heightDp = 320)
+@Composable
+private fun CurrencyListPreview() {
+    CurrencyDemoTheme {
+        CurrencyList(
+            items = previewCurrencyItems,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CurrencyRowPreview() {
+    CurrencyDemoTheme {
+        CurrencyRow(item = previewCurrencyItems.first())
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+private fun EmptyStatePreview() {
+    CurrencyDemoTheme {
+        EmptyState(modifier = Modifier.fillMaxWidth())
     }
 }
