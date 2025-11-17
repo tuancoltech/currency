@@ -11,6 +11,7 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
 - **Demo controls** (5 buttons) to clear/seed the DB, switch between currency list A (crypto), list B (fiat), or show all purchasable currencies.
 - **Search UX** with cancel/back handling and an explicit empty state.
 - **Unit tests** covering the view-model search rules plus a reusable `MainDispatcherRule`.
+- **Baseline Profile** to keep startups fast, with a **Benchmark** module.
 
 ## Getting Started
 1. Ensure you have JDK 17 installed (`/usr/libexec/java_home -v 17` should resolve one).  
@@ -49,9 +50,12 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
 ## Useful Paths
 - `app/src/main/java/com/crypto/demo/ui/DemoActivity.kt` – wiring of controls and fragment swapping.
 - `app/src/main/java/com/crypto/demo/ui/CurrencyListFragment.kt` & `app/src/main/res/layout/fragment_currency_list.xml` – XML-driven list implementation.
+- `baselineprofile/src/main/java/com/crypto/demo/baselineprofile/BaselineProfileGenerator.kt` – instrumentation test that records the Baseline Profile.
+- `macrobenchmark/src/main/java/com/crypto/demo/macrobenchmark/StartupBenchmark.kt` – Jetpack Macrobenchmark tests comparing startup with/without Baseline Profiles.
 - `app/src/main/java/com/crypto/demo/data/repository/CurrencyRepositoryImpl.kt` – DB/Flow integration.
 - `app/src/test/java/com/crypto/demo/ui/CurrencyListViewModelTest.kt` – verifies search behaviour.
 
 ## Notes
 - Gradle wrapper is pinned to **8.7** with Kotlin **1.9.24** and Material Components **1.12.0**.
+- Generate/verify startup performance with `./gradlew :baselineprofile:connectedBaselineProfile` and `./gradlew :macrobenchmark:connectedCheck`.
 - The project seeds the database automatically on first launch (and exposes a button to reseed).

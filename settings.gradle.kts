@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "currency"
 include(":app")
+include(":baselineprofile")
+include(":macrobenchmark")
