@@ -188,6 +188,25 @@ class CurrencyListViewModelTest {
         }
     }
 
+    @Test
+    fun blankQueryAutomaticallyDeactivatesSearch() = runTest {
+        repository.setData(
+            listOf(
+                CurrencyInfo("BTC", "Bitcoin", "BTC", null, CurrencyListType.CRYPTO)
+            )
+        )
+        val viewModel = viewModel(CurrencyListType.CRYPTO)
+
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.onSearchQueryChanged("B")
+            assertTrue(awaitItem().isSearchActive)
+            viewModel.onSearchQueryChanged("")
+            assertFalse(awaitItem().isSearchActive)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModel(type: CurrencyListType): CurrencyListViewModel {
         return viewModelWithRawArg(type.name)
     }

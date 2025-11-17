@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 class CurrencyListFragmentTest {
 
     @Test
-    fun newInstanceStoresDatasetArgumentAndComposes() {
+    fun newInstanceStoresDatasetArgument() {
         val instance = CurrencyListFragment.newInstance(CurrencyListType.ALL)
         assertEquals(
             CurrencyListType.ALL.name,

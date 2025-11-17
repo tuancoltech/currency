@@ -3,9 +3,10 @@
     <string name="control_panel_title">Demo Controls</string>
     <string name="button_clear">Clear Database</string>
     <string name="button_seed">Seed Demo Data</string>
-    <string name="button_crypto">Show Crypto</string>
-    <string name="button_fiat">Show Fiat</string>
-    <string name="button_all">Show All Purchasable</string>
+    <string name="button_crypto">Crypto</string>
+    <string name="button_fiat">Fiat</string>
+    <string name="button_all">All</string>
     <string name="search_hint">Search currency</string>
     <string name="empty_state_message">No currencies match your search.</string>
+    <string name="currency_subtitle_format">%1$s - %2$s</string>
 </resources>

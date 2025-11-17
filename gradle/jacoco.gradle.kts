@@ -37,6 +37,7 @@ val jacocoTestReport by tasks.registering(JacocoReport::class) {
         "**/ui/theme/**",
         "**/ui/DemoActivity*.*",
         "**/ui/CurrencyListFragment*.*",
+        "**/ui/CurrencyListAdapter*.*",
         "**/CurrencyDemoApp*.*",
         "**/di/DatabaseModule*.*",
         "**/di/RepositoryModule*.*",
