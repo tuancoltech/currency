@@ -35,4 +35,15 @@ interface CurrencyDao {
 
     @Query("SELECT COUNT(*) FROM currencies")
     suspend fun count(): Int
+
+    @Query(
+        """
+        SELECT * FROM currencies
+        WHERE list_type IN (:listTypes)
+        ORDER BY name
+        """
+    )
+    suspend fun getCurrencies(
+        listTypes: List<String>
+    ): List<CurrencyInfoEntity>
 }

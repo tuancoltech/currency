@@ -3,6 +3,7 @@ package com.crypto.demo.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crypto.demo.data.local.SampleCurrencyData
+import com.crypto.demo.domain.model.CurrencyInfo
 import com.crypto.demo.domain.model.CurrencyListType
 import com.crypto.demo.domain.repository.CurrencyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,11 +19,13 @@ class DemoViewModel @Inject constructor(
     private val repository: CurrencyRepository
 ) : ViewModel() {
 
+    private var datasetVersion = 0L
     init {
         viewModelScope.launch {
             if (repository.isEmpty()) {
                 repository.seedCurrencies(SampleCurrencyData.allPurchasable)
                 showMessage("Initial dataset loaded")
+                updateDatasetVersion()
             }
         }
     }
@@ -38,6 +41,7 @@ class DemoViewModel @Inject constructor(
             repository.clearAll()
             showMessage("Local database cleared")
             setLoading(false)
+            updateDatasetVersion()
         }
     }
 
@@ -47,11 +51,20 @@ class DemoViewModel @Inject constructor(
             repository.seedCurrencies(SampleCurrencyData.allPurchasable)
             showMessage("Demo data inserted")
             setLoading(false)
+            updateDatasetVersion()
         }
     }
 
     fun onDatasetSelected(type: CurrencyListType) {
-        _uiState.update { it.copy(selectedListType = type) }
+        updateDatasetVersion(type)
+    }
+
+    suspend fun loadCurrencies(type: CurrencyListType): List<CurrencyInfo> {
+        val listTypes = when (type) {
+            CurrencyListType.ALL -> listOf(CurrencyListType.CRYPTO, CurrencyListType.FIAT)
+            else -> listOf(type)
+        }
+        return repository.getCurrencies(listTypes)
     }
 
     fun onMessageConsumed() {
@@ -66,12 +79,23 @@ class DemoViewModel @Inject constructor(
         messageId += 1
         _uiState.update { it.copy(message = UiMessage(messageId, text)) }
     }
+
+    private fun updateDatasetVersion(newType: CurrencyListType? = null) {
+        datasetVersion += 1
+        _uiState.update { state ->
+            state.copy(
+                selectedListType = newType ?: state.selectedListType,
+                datasetVersion = datasetVersion
+            )
+        }
+    }
 }
 
 data class DemoUiState(
     val selectedListType: CurrencyListType = CurrencyListType.CRYPTO,
     val isProcessing: Boolean = false,
-    val message: UiMessage? = null
+    val message: UiMessage? = null,
+    val datasetVersion: Long = 0L
 )
 
 data class UiMessage(

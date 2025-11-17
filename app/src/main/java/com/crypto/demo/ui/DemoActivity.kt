@@ -19,6 +19,8 @@ import com.crypto.demo.databinding.ActivityDemoBinding
 import com.crypto.demo.domain.model.CurrencyListType
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.ArrayList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -28,6 +30,8 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
     private var currentListType: CurrencyListType? = null
     private var isSearchFocused: Boolean = false
     private var suppressDatasetCallback = false
+    private var lastRenderedVersion: Long = -1L
+    private var showListJob: Job? = null
     private lateinit var binding: ActivityDemoBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +64,11 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     renderControlPanel(state)
-                    if (currentListType != state.selectedListType) {
+                    val requiresRefresh =
+                        currentListType != state.selectedListType ||
+                            lastRenderedVersion != state.datasetVersion
+                    if (requiresRefresh) {
+                        lastRenderedVersion = state.datasetVersion
                         showList(state.selectedListType)
                     }
                 }
@@ -91,13 +99,21 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
     }
 
     private fun showList(type: CurrencyListType) {
-        currentListType = type
-        supportFragmentManager.commit {
-            replace(
-                R.id.currencyListContainer,
-                CurrencyListFragment.newInstance(type),
-                CurrencyListFragment.FRAGMENT_TAG
-            )
+        showListJob?.cancel()
+        showListJob = lifecycleScope.launch {
+            val currencies = viewModel.loadCurrencies(type)
+            val fragment = CurrencyListFragment.newInstance(ArrayList(currencies))
+            fragment.arguments = (fragment.arguments ?: Bundle()).apply {
+                putString(CurrencyListFragment.ARG_SELECTED_DATASET, type.name)
+            }
+            currentListType = type
+            supportFragmentManager.commit {
+                replace(
+                    R.id.currencyListContainer,
+                    fragment,
+                    CurrencyListFragment.FRAGMENT_TAG
+                )
+            }
         }
     }
 

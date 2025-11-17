@@ -8,7 +8,7 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
 - **DemoActivity + CurrencyListFragment** render entirely through XML layouts with view binding so the fragment is reusable in other contexts.
 - **Room** persistence with Flow-based DAO queries that satisfy the search matching rules from the spec (prefix match, match after a whitespace, symbol prefix).
 - **Hilt** DI graph that wires the database, repository, coroutine dispatchers, and view models.
-- **Demo controls** (5 buttons) to clear/seed the DB, switch between currency list A (crypto), list B (fiat), or show all purchasable currencies.
+- **Demo controls** (5 buttons) to clear/seed the DB, switch between currency list A (crypto), list B (fiat), or show all purchasable currencies. The activity queries Room for the requested dataset and hands the resulting `ArrayList<CurrencyInfo>` into the fragment so the UI always reflects live data.
 - **Search UX** with cancel/back handling and an explicit empty state.
 - **Unit tests** covering the view-model search rules plus a reusable `MainDispatcherRule`.
 - **Baseline Profile** to keep startups fast, with a **Benchmark** module.
@@ -40,7 +40,7 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
 | Tests | `CurrencyListViewModelTest` with Turbine + `MainDispatcherRule` |
 
 ## Data & Requirements
-- `SampleCurrencyData` contains the two lists Crypto list A & Fiat list B and the fragment uses the Room data, not in-memory lists.
+- `SampleCurrencyData` contains the two lists Crypto list A & Fiat list B and the fragment receives real `CurrencyInfo` rows that were queried from Room (via `DemoViewModel`) rather than static in-memory data.
 - Search rules  
   1. name starts with search term  
   2. name contains "` space + search term`"  

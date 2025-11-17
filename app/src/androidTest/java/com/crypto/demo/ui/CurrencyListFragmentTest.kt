@@ -1,6 +1,7 @@
 package com.crypto.demo.ui
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.crypto.demo.domain.model.CurrencyInfo
 import com.crypto.demo.domain.model.CurrencyListType
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -10,11 +11,13 @@ import org.junit.runner.RunWith
 class CurrencyListFragmentTest {
 
     @Test
-    fun newInstanceStoresDatasetArgument() {
-        val instance = CurrencyListFragment.newInstance(CurrencyListType.ALL)
+    fun newInstanceStoresCurrencyArguments() {
+        val fiat = CurrencyInfo("USD", "Dollar", "$", "USD", CurrencyListType.FIAT)
+        val currencies = arrayListOf<CurrencyInfo>(fiat)
+        val instance = CurrencyListFragment.newInstance(currencies)
         assertEquals(
-            CurrencyListType.ALL.name,
-            instance.arguments?.getString(CurrencyListFragment.ARG_DATASET)
+            currencies,
+            instance.arguments?.getParcelableArrayList<CurrencyInfo>(CurrencyListFragment.ARG_CURRENCIES)
         )
     }
 }

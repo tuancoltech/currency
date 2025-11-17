@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.getSystemService
-import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
@@ -20,10 +19,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.crypto.demo.R
 import com.crypto.demo.databinding.FragmentCurrencyListBinding
-import com.crypto.demo.domain.model.CurrencyListType
+import com.crypto.demo.domain.model.CurrencyInfo
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.math.max
 import kotlinx.coroutines.launch
+import java.util.ArrayList
 
 @AndroidEntryPoint
 class CurrencyListFragment : Fragment() {
@@ -173,12 +173,15 @@ class CurrencyListFragment : Fragment() {
     }
 
     companion object {
-        const val ARG_DATASET = "arg_currency_dataset"
+        const val ARG_CURRENCIES = "arg_currency_items"
+        const val ARG_SELECTED_DATASET = "arg_currency_dataset"
         const val FRAGMENT_TAG = "CurrencyListFragment"
 
-        fun newInstance(type: CurrencyListType): CurrencyListFragment {
+        fun newInstance(currencies: ArrayList<CurrencyInfo>): CurrencyListFragment {
             return CurrencyListFragment().apply {
-                arguments = bundleOf(ARG_DATASET to type.name)
+                arguments = Bundle().apply {
+                    putParcelableArrayList(ARG_CURRENCIES, currencies)
+                }
             }
         }
     }

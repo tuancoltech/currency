@@ -2,78 +2,61 @@ package com.crypto.demo.ui
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.crypto.demo.domain.model.CurrencyInfo
 import com.crypto.demo.domain.model.CurrencyListType
-import com.crypto.demo.domain.repository.CurrencyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.ArrayList
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 class CurrencyListViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val repository: CurrencyRepository
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val requestedType = savedStateHandle.get<String>(CurrencyListFragment.ARG_DATASET)
-        ?.let { runCatching { CurrencyListType.valueOf(it) }.getOrElse { CurrencyListType.CRYPTO } }
-        ?: CurrencyListType.CRYPTO
+    private val initialCurrencies =
+        savedStateHandle.get<ArrayList<CurrencyInfo>>(CurrencyListFragment.ARG_CURRENCIES)
+            ?.toList()
+            ?: emptyList()
 
-    private val listTypes: List<CurrencyListType> = when (requestedType) {
-        CurrencyListType.ALL -> listOf(CurrencyListType.CRYPTO, CurrencyListType.FIAT)
-        else -> listOf(requestedType)
-    }
+    private val requestedDataset =
+        savedStateHandle.get<String>(CurrencyListFragment.ARG_SELECTED_DATASET)
+            ?.let { runCatching { CurrencyListType.valueOf(it) }.getOrNull() }
 
-    private val searchQuery = MutableStateFlow("")
-    private val isSearchActive = MutableStateFlow(false)
+    private val baseCurrencies = initialCurrencies.sortedBy { it.name }
+    private val selectedDataset: CurrencyListType =
+        requestedDataset ?: inferDataset(baseCurrencies)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val currencies = searchQuery
-        .flatMapLatest { query ->
-            repository.observeCurrencies(listTypes, query)
-        }
+    private var currentQuery: String = ""
+    private var currentSearchActive: Boolean = false
 
-    val uiState: StateFlow<CurrencyListUiState> = combine(
-        currencies,
-        searchQuery,
-        isSearchActive
-    ) { items, query, searching ->
+    private val _uiState = MutableStateFlow(
         CurrencyListUiState(
-            title = titleFor(requestedType),
-            currencies = items.map { it.toUiModel() },
-            searchQuery = query,
-            isSearchActive = searching,
-            isEmpty = items.isEmpty(),
-            selectedDataset = requestedType
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = CurrencyListUiState(
-            title = titleFor(requestedType),
-            selectedDataset = requestedType
+            title = titleFor(selectedDataset),
+            currencies = baseCurrencies.map { it.toUiModel() },
+            isEmpty = baseCurrencies.isEmpty(),
+            selectedDataset = selectedDataset
         )
     )
+    val uiState: StateFlow<CurrencyListUiState> = _uiState.asStateFlow()
 
     fun onSearchQueryChanged(value: String) {
-        searchQuery.value = value
-        isSearchActive.value = value.isNotBlank()
+        currentQuery = value
+        currentSearchActive = value.isNotBlank()
+        publishState()
     }
 
     fun onSearchActivated() {
-        isSearchActive.value = true
+        currentSearchActive = true
+        publishState()
     }
 
     fun onCloseSearch() {
-        searchQuery.value = ""
-        isSearchActive.value = false
+        currentQuery = ""
+        currentSearchActive = false
+        publishState()
     }
 
     private fun titleFor(type: CurrencyListType): String = when (type) {
@@ -91,6 +74,42 @@ class CurrencyListViewModel @Inject constructor(
 
     private fun subtitleFor(item: CurrencyInfo): String {
         return item.code?.takeIf { it.isNotBlank() } ?: item.listType.name
+    }
+
+    private fun inferDataset(items: List<CurrencyInfo>): CurrencyListType {
+        val distinctTypes = items.map { it.listType }.distinct()
+        return when {
+            distinctTypes.isEmpty() -> CurrencyListType.CRYPTO
+            distinctTypes.size == 1 -> distinctTypes.first()
+            else -> CurrencyListType.ALL
+        }
+    }
+
+    private fun filterCurrencies(
+        items: List<CurrencyInfo>,
+        query: String
+    ): List<CurrencyInfo> {
+        if (query.isBlank()) return items
+        val lowered = query.lowercase()
+        return items.filter { currency ->
+            val name = currency.name.lowercase()
+            val symbol = currency.symbol.lowercase()
+            name.startsWith(lowered) ||
+                name.contains(" $lowered") ||
+                symbol.startsWith(lowered)
+        }
+    }
+
+    private fun publishState() {
+        val filtered = filterCurrencies(baseCurrencies, currentQuery)
+        _uiState.value = CurrencyListUiState(
+            title = titleFor(selectedDataset),
+            currencies = filtered.map { it.toUiModel() },
+            searchQuery = currentQuery,
+            isSearchActive = currentSearchActive,
+            isEmpty = filtered.isEmpty(),
+            selectedDataset = selectedDataset
+        )
     }
 }
 

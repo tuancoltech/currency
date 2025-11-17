@@ -75,6 +75,60 @@ class DemoViewModelTest {
         advanceUntilIdle()
 
         assertEquals(CurrencyListType.ALL, viewModel.uiState.value.selectedListType)
+        assertTrue(viewModel.uiState.value.datasetVersion > 0)
+    }
+
+    @Test
+    fun datasetVersionUpdatesAfterSeedAndClear() = runTest {
+        repository.isEmptyReturn = false
+        val viewModel = DemoViewModel(repository)
+        advanceUntilIdle()
+
+        val initialVersion = viewModel.uiState.value.datasetVersion
+
+        viewModel.onSeedDatabase()
+        advanceUntilIdle()
+        val afterSeed = viewModel.uiState.value.datasetVersion
+
+        viewModel.onClearDatabase()
+        advanceUntilIdle()
+        val afterClear = viewModel.uiState.value.datasetVersion
+
+        assertTrue(afterSeed > initialVersion)
+        assertTrue(afterClear > afterSeed)
+    }
+
+    @Test
+    fun loadCurrenciesFetchesFromRepository() = runTest {
+        repository.isEmptyReturn = false
+        repository.nextGetResult = listOf(
+            CurrencyInfo("BTC", "Bitcoin", "BTC", null, CurrencyListType.CRYPTO)
+        )
+        val viewModel = DemoViewModel(repository)
+        advanceUntilIdle()
+
+        val result = viewModel.loadCurrencies(CurrencyListType.ALL)
+
+        assertEquals(repository.nextGetResult, result)
+        assertEquals(
+            listOf(CurrencyListType.CRYPTO, CurrencyListType.FIAT),
+            repository.lastGetRequest
+        )
+    }
+
+    @Test
+    fun loadCurrenciesForSingleDatasetRequestsCorrectType() = runTest {
+        repository.isEmptyReturn = false
+        repository.nextGetResult = listOf(
+            CurrencyInfo("SGD", "Singapore Dollar", "$", "SGD", CurrencyListType.FIAT)
+        )
+        val viewModel = DemoViewModel(repository)
+        advanceUntilIdle()
+
+        val result = viewModel.loadCurrencies(CurrencyListType.FIAT)
+
+        assertEquals(repository.nextGetResult, result)
+        assertEquals(listOf(CurrencyListType.FIAT), repository.lastGetRequest)
     }
 
     @Test
@@ -96,11 +150,20 @@ class DemoViewModelTest {
         var lastSeed: List<CurrencyInfo>? = null
         var clearCount = 0
         var isEmptyReturn: Boolean = true
+        var nextGetResult: List<CurrencyInfo> = emptyList()
+        var lastGetRequest: List<CurrencyListType>? = null
 
         override fun observeCurrencies(
             listTypes: List<CurrencyListType>,
             searchTerm: String
         ): Flow<List<CurrencyInfo>> = items
+
+        override suspend fun getCurrencies(
+            listTypes: List<CurrencyListType>
+        ): List<CurrencyInfo> {
+            lastGetRequest = listTypes
+            return nextGetResult
+        }
 
         override suspend fun seedCurrencies(data: List<CurrencyInfo>) {
             lastSeed = data

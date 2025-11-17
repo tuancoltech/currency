@@ -10,6 +10,10 @@ interface CurrencyRepository {
         searchTerm: String
     ): Flow<List<CurrencyInfo>>
 
+    suspend fun getCurrencies(
+        listTypes: List<CurrencyListType>
+    ): List<CurrencyInfo>
+
     suspend fun seedCurrencies(data: List<CurrencyInfo>)
 
     suspend fun clearAll()
