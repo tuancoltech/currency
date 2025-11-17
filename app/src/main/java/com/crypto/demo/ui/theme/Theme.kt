@@ -2,9 +2,11 @@ package com.crypto.demo.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -30,4 +32,12 @@ fun CurrencyDemoTheme(
         typography = Typography,
         content = content
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CurrencyDemoThemePreview() {
+    CurrencyDemoTheme {
+        Text(text = "Currency Demo Preview")
+    }
 }
