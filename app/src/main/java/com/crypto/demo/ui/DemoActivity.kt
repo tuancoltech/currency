@@ -5,19 +5,19 @@ import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.crypto.demo.R
+import com.crypto.demo.databinding.ActivityDemoBinding
 import com.crypto.demo.domain.model.CurrencyListType
-import com.crypto.demo.ui.components.DemoControlPanel
-import com.crypto.demo.ui.theme.CurrencyDemoTheme
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -26,46 +26,67 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
 
     private val viewModel: DemoViewModel by viewModels()
     private var currentListType: CurrencyListType? = null
-    private lateinit var controlPanelComposeView: ComposeView
     private var isSearchFocused: Boolean = false
+    private var suppressDatasetCallback = false
+    private lateinit var binding: ActivityDemoBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_demo)
+        binding = ActivityDemoBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applyRootInsets()
+        setupControlPanel()
+        observeUiState()
+    }
 
-        controlPanelComposeView = findViewById(R.id.controlPanelComposeView)
-
-        controlPanelComposeView.setContent {
-            CurrencyDemoTheme {
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                DemoControlPanel(
-                    state = uiState,
-                    onClear = viewModel::onClearDatabase,
-                    onSeed = viewModel::onSeedDatabase,
-                    onShowCrypto = { viewModel.onDatasetSelected(CurrencyListType.CRYPTO) },
-                    onShowFiat = { viewModel.onDatasetSelected(CurrencyListType.FIAT) },
-                    onShowAll = { viewModel.onDatasetSelected(CurrencyListType.ALL) },
-                    onMessageConsumed = viewModel::onMessageConsumed
-                )
+    private fun setupControlPanel() = with(binding) {
+        clearButton.setOnClickListener { viewModel.onClearDatabase() }
+        seedButton.setOnClickListener { viewModel.onSeedDatabase() }
+        datasetToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked || suppressDatasetCallback) return@addOnButtonCheckedListener
+            when (checkedId) {
+                R.id.buttonShowCrypto -> viewModel.onDatasetSelected(CurrencyListType.CRYPTO)
+                R.id.buttonShowFiat -> viewModel.onDatasetSelected(CurrencyListType.FIAT)
+                R.id.buttonShowAll -> viewModel.onDatasetSelected(CurrencyListType.ALL)
             }
         }
+    }
 
+    private fun observeUiState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    val target = when (state.selectedListType) {
-                        CurrencyListType.CRYPTO -> CurrencyListType.CRYPTO
-                        CurrencyListType.FIAT -> CurrencyListType.FIAT
-                        CurrencyListType.ALL -> CurrencyListType.ALL
-                    }
-                    if (currentListType != target) {
-                        showList(target)
+                    renderControlPanel(state)
+                    if (currentListType != state.selectedListType) {
+                        showList(state.selectedListType)
                     }
                 }
             }
+        }
+    }
+
+    private fun renderControlPanel(state: DemoUiState) = with(binding) {
+        clearButton.isEnabled = !state.isProcessing
+        seedButton.isEnabled = !state.isProcessing
+        demoProgress.isVisible = state.isProcessing
+
+        val selectedButtonId = when (state.selectedListType) {
+            CurrencyListType.CRYPTO -> R.id.buttonShowCrypto
+            CurrencyListType.FIAT -> R.id.buttonShowFiat
+            CurrencyListType.ALL -> R.id.buttonShowAll
+        }
+        if (datasetToggleGroup.checkedButtonId != selectedButtonId) {
+            suppressDatasetCallback = true
+            datasetToggleGroup.check(selectedButtonId)
+            suppressDatasetCallback = false
+        }
+
+        state.message?.let { message ->
+            Snackbar.make(controlPanelCard, message.text, Snackbar.LENGTH_SHORT).show()
+            viewModel.onMessageConsumed()
         }
     }
 
@@ -80,9 +101,18 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
         }
     }
 
+    private fun applyRootInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.demoRoot) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.demoContainer.setPadding(0, systemBars.top, 0, systemBars.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.demoRoot)
+    }
+
     override fun onCurrencySearchFocusChanged(hasFocus: Boolean) {
         if (isSearchFocused == hasFocus) return
         isSearchFocused = hasFocus
-        controlPanelComposeView.isGone = hasFocus
+        binding.controlPanelCard.isGone = hasFocus
     }
 }

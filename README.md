@@ -2,10 +2,10 @@
 
 ![Coverage](https://img.shields.io/badge/coverage-100.00%25-brightgreen)
 
-Android sample project that showcases usages of a `CurrencyListFragment` using Kotlin, Jetpack Compose, Room, Hilt, and Coroutines.
+Android sample project that showcases usages of a `CurrencyListFragment` using Kotlin, XML layouts, Room, Hilt, and Coroutines.
 
 ## Project Highlights
-- **DemoActivity + CurrencyListFragment** driven by Compose UI so the fragment is reusable in other contexts.
+- **DemoActivity + CurrencyListFragment** render entirely through XML layouts with view binding so the fragment is reusable in other contexts.
 - **Room** persistence with Flow-based DAO queries that satisfy the search matching rules from the spec (prefix match, match after a whitespace, symbol prefix).
 - **Hilt** DI graph that wires the database, repository, coroutine dispatchers, and view models.
 - **Demo controls** (5 buttons) to clear/seed the DB, switch between currency list A (crypto), list B (fiat), or show all purchasable currencies.
@@ -31,7 +31,7 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
 ## Tech Stack
 | Layer | Implementation |
 |-------|----------------|
-| UI | Compose Material 3 inside `DemoActivity` and `CurrencyListFragment` |
+| UI | XML layouts (ConstraintLayout + RecyclerView + Material Components) |
 | State | `DemoViewModel`, `CurrencyListViewModel`, Kotlin `StateFlow` |
 | DI | Hilt (`@HiltAndroidApp`, modules for DB, repository, dispatchers) |
 | Data | Room (`CurrencyInfoEntity`, DAO, converters) with Flow-backed queries |
@@ -48,10 +48,10 @@ Android sample project that showcases usages of a `CurrencyListFragment` using K
 
 ## Useful Paths
 - `app/src/main/java/com/crypto/demo/ui/DemoActivity.kt` – wiring of controls and fragment swapping.
-- `app/src/main/java/com/crypto/demo/ui/CurrencyListFragment.kt` – Compose-driven list implementation.
+- `app/src/main/java/com/crypto/demo/ui/CurrencyListFragment.kt` & `app/src/main/res/layout/fragment_currency_list.xml` – XML-driven list implementation.
 - `app/src/main/java/com/crypto/demo/data/repository/CurrencyRepositoryImpl.kt` – DB/Flow integration.
 - `app/src/test/java/com/crypto/demo/ui/CurrencyListViewModelTest.kt` – verifies search behaviour.
 
 ## Notes
-- Gradle wrapper is pinned to **8.7** with Kotlin **1.9.24** and Compose BOM **2024.06.00**.
+- Gradle wrapper is pinned to **8.7** with Kotlin **1.9.24** and Material Components **1.12.0**.
 - The project seeds the database automatically on first launch (and exposes a button to reseed).
