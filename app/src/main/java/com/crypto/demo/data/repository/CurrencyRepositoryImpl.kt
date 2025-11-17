@@ -24,16 +24,16 @@ class CurrencyRepositoryImpl @Inject constructor(
         listTypes: List<CurrencyListType>,
         searchTerm: String
     ): Flow<List<CurrencyInfo>> {
-        val targetTypes = if (listTypes.isEmpty()) {
-            CurrencyListType.entries.filter { it != CurrencyListType.ALL }
-        } else {
-            listTypes.filter { it != CurrencyListType.ALL }
-        }
-        val persistedTypes = targetTypes.ifEmpty {
-            CurrencyListType.entries.filter { it != CurrencyListType.ALL }
-        }.map { it.name }
+        val persistedTypes = resolvedListTypes(listTypes)
         return dao.observeCurrencies(persistedTypes, searchTerm.trim())
             .map { entities -> entities.map { it.toDomain() } }
+    }
+
+    override suspend fun getCurrencies(
+        listTypes: List<CurrencyListType>
+    ): List<CurrencyInfo> = withContext(ioDispatcher) {
+        val persistedTypes = resolvedListTypes(listTypes)
+        dao.getCurrencies(persistedTypes).map { it.toDomain() }
     }
 
     override suspend fun seedCurrencies(data: List<CurrencyInfo>) = withContext(ioDispatcher) {
@@ -46,5 +46,17 @@ class CurrencyRepositoryImpl @Inject constructor(
 
     override suspend fun isEmpty(): Boolean = withContext(ioDispatcher) {
         dao.count() == 0
+    }
+
+    private fun resolvedListTypes(
+        requestedTypes: List<CurrencyListType>
+    ): List<String> {
+        val sanitized = requestedTypes.filter { it != CurrencyListType.ALL }
+        val targetTypes = if (sanitized.isEmpty()) {
+            CurrencyListType.entries.filter { it != CurrencyListType.ALL }
+        } else {
+            sanitized
+        }
+        return targetTypes.map { it.name }
     }
 }

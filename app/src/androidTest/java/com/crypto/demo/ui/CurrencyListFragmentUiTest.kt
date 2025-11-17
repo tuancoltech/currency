@@ -76,8 +76,8 @@ class CurrencyListFragmentUiTest {
                 CurrencyListFragment.FRAGMENT_TAG
             )
             dataset = fragment?.arguments
-                ?.getString(CurrencyListFragment.ARG_DATASET)
-                ?.let { CurrencyListType.valueOf(it) }
+                ?.getString(CurrencyListFragment.ARG_SELECTED_DATASET)
+                ?.let { runCatching { CurrencyListType.valueOf(it) }.getOrNull() }
         }
         return dataset
     }

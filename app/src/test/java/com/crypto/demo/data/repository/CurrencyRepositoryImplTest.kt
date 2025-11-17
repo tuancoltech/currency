@@ -133,6 +133,37 @@ class CurrencyRepositoryImplTest {
     }
 
     @Test
+    fun getCurrenciesResolvesListTypesAndMapsEntities() = runTest {
+        val (dao, repository) = createSubject()
+        val entity = CurrencyInfoEntity(
+            id = "CHF",
+            name = "Swiss Franc",
+            symbol = "₣",
+            code = "CHF",
+            listType = CurrencyListType.FIAT
+        )
+        dao.nextGetResult = listOf(entity)
+
+        val result = repository.getCurrencies(listOf(CurrencyListType.ALL))
+
+        assertEquals(
+            listOf(CurrencyListType.CRYPTO.name, CurrencyListType.FIAT.name),
+            dao.lastGetListTypes
+        )
+        assertEquals("CHF", result.single().id)
+    }
+
+    @Test
+    fun getCurrenciesFiltersAllFromRequestedTypes() = runTest {
+        val (dao, repository) = createSubject()
+        dao.nextGetResult = emptyList()
+
+        repository.getCurrencies(listOf(CurrencyListType.ALL, CurrencyListType.FIAT))
+
+        assertEquals(listOf(CurrencyListType.FIAT.name), dao.lastGetListTypes)
+    }
+
+    @Test
     fun seedCurrenciesSavesMappedEntities() = runTest {
         val (dao, repository) = createSubject()
         val input = listOf(
@@ -219,9 +250,11 @@ class CurrencyRepositoryImplTest {
         private val flow = MutableStateFlow<List<CurrencyInfoEntity>>(emptyList())
         var lastListTypes: List<String> = emptyList()
         var lastSearchTerm: String = ""
+        var lastGetListTypes: List<String> = emptyList()
         val insertedEntities = mutableListOf<List<CurrencyInfoEntity>>()
         var clearCount = 0
         var countValue = 0
+        var nextGetResult: List<CurrencyInfoEntity> = emptyList()
 
         fun emit(list: List<CurrencyInfoEntity>) {
             flow.value = list
@@ -247,6 +280,11 @@ class CurrencyRepositoryImplTest {
         }
 
         override suspend fun count(): Int = countValue
+
+        override suspend fun getCurrencies(listTypes: List<String>): List<CurrencyInfoEntity> {
+            lastGetListTypes = listTypes
+            return nextGetResult
+        }
     }
 
     private class FiniteCurrencyDao(
@@ -262,6 +300,9 @@ class CurrencyRepositoryImplTest {
         override suspend fun clearAll() = Unit
 
         override suspend fun count(): Int = emissions.sumOf { it.size }
+
+        override suspend fun getCurrencies(listTypes: List<String>): List<CurrencyInfoEntity> =
+            emptyList()
     }
 
     private class RecordingDispatcher : CoroutineDispatcher() {
