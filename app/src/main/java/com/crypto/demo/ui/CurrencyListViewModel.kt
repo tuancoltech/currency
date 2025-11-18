@@ -1,7 +1,9 @@
 package com.crypto.demo.ui
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.crypto.demo.R
 import com.crypto.demo.domain.model.CurrencyInfo
 import com.crypto.demo.domain.model.CurrencyListType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,7 +36,7 @@ class CurrencyListViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         CurrencyListUiState(
-            title = titleFor(selectedDataset),
+            titleRes = titleFor(selectedDataset),
             currencies = baseCurrencies.map { it.toUiModel() },
             isEmpty = baseCurrencies.isEmpty(),
             selectedDataset = selectedDataset
@@ -59,10 +61,11 @@ class CurrencyListViewModel @Inject constructor(
         publishState()
     }
 
-    private fun titleFor(type: CurrencyListType): String = when (type) {
-        CurrencyListType.CRYPTO -> "Crypto Currency"
-        CurrencyListType.FIAT -> "Fiat Currency"
-        CurrencyListType.ALL -> "Purchasable Currency"
+    @StringRes
+    private fun titleFor(type: CurrencyListType): Int = when (type) {
+        CurrencyListType.CRYPTO -> R.string.currency_title_crypto
+        CurrencyListType.FIAT -> R.string.currency_title_fiat
+        CurrencyListType.ALL -> R.string.currency_title_all
     }
 
     private fun CurrencyInfo.toUiModel(): CurrencyRowItem = CurrencyRowItem(
@@ -103,7 +106,7 @@ class CurrencyListViewModel @Inject constructor(
     private fun publishState() {
         val filtered = filterCurrencies(baseCurrencies, currentQuery)
         _uiState.value = CurrencyListUiState(
-            title = titleFor(selectedDataset),
+            titleRes = titleFor(selectedDataset),
             currencies = filtered.map { it.toUiModel() },
             searchQuery = currentQuery,
             isSearchActive = currentSearchActive,
@@ -114,7 +117,7 @@ class CurrencyListViewModel @Inject constructor(
 }
 
 data class CurrencyListUiState(
-    val title: String = "",
+    @StringRes val titleRes: Int = R.string.currency_title_crypto,
     val currencies: List<CurrencyRowItem> = emptyList(),
     val searchQuery: String = "",
     val isSearchActive: Boolean = false,

@@ -111,8 +111,9 @@ class CurrencyListFragment : Fragment() {
     }
 
     private fun render(state: CurrencyListUiState) = with(binding) {
-        if (!currencyTitle.text.contentEquals(state.title)) {
-            currencyTitle.text = state.title
+        val titleText = getString(state.titleRes)
+        if (!currencyTitle.text.contentEquals(titleText)) {
+            currencyTitle.text = titleText
         }
 
         val currentQuery = searchEditText.text?.toString().orEmpty()
