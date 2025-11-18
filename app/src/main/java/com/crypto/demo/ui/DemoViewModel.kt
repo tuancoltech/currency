@@ -24,7 +24,7 @@ class DemoViewModel @Inject constructor(
         viewModelScope.launch {
             if (repository.isEmpty()) {
                 repository.seedCurrencies(SampleCurrencyData.allPurchasable)
-                showMessage("Initial dataset loaded")
+                showMessage(UiMessageType.INITIAL_SEED)
                 updateDatasetVersion()
             }
         }
@@ -39,7 +39,7 @@ class DemoViewModel @Inject constructor(
         viewModelScope.launch {
             setLoading(true)
             repository.clearAll()
-            showMessage("Local database cleared")
+            showMessage(UiMessageType.CLEARED)
             setLoading(false)
             updateDatasetVersion()
         }
@@ -49,7 +49,7 @@ class DemoViewModel @Inject constructor(
         viewModelScope.launch {
             setLoading(true)
             repository.seedCurrencies(SampleCurrencyData.allPurchasable)
-            showMessage("Demo data inserted")
+            showMessage(UiMessageType.SEED)
             setLoading(false)
             updateDatasetVersion()
         }
@@ -75,9 +75,9 @@ class DemoViewModel @Inject constructor(
         _uiState.update { it.copy(isProcessing = loading) }
     }
 
-    private fun showMessage(text: String) {
+    private fun showMessage(type: UiMessageType) {
         messageId += 1
-        _uiState.update { it.copy(message = UiMessage(messageId, text)) }
+        _uiState.update { it.copy(message = UiMessage(messageId, type)) }
     }
 
     private fun updateDatasetVersion(newType: CurrencyListType? = null) {
@@ -100,5 +100,11 @@ data class DemoUiState(
 
 data class UiMessage(
     val id: Long,
-    val text: String
+    val type: UiMessageType
 )
+
+enum class UiMessageType {
+    INITIAL_SEED,
+    SEED,
+    CLEARED
+}

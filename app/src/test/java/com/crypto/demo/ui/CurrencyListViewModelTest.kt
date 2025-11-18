@@ -2,6 +2,7 @@ package com.crypto.demo.ui
 
 import androidx.lifecycle.SavedStateHandle
 import com.crypto.demo.MainDispatcherRule
+import com.crypto.demo.R
 import com.crypto.demo.domain.model.CurrencyInfo
 import com.crypto.demo.domain.model.CurrencyListType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,7 +72,7 @@ class CurrencyListViewModelTest {
     @Test
     fun datasetDefaultsToCryptoWhenMissing() {
         val viewModel = viewModel(emptyList())
-        assertEquals("Crypto Currency", viewModel.uiState.value.title)
+        assertEquals(R.string.currency_title_crypto, viewModel.uiState.value.titleRes)
         assertEquals(CurrencyListType.CRYPTO, viewModel.uiState.value.selectedDataset)
     }
 
@@ -81,7 +82,7 @@ class CurrencyListViewModelTest {
             currencies = emptyList(),
             selectedType = CurrencyListType.FIAT
         )
-        assertEquals("Fiat Currency", viewModel.uiState.value.title)
+        assertEquals(R.string.currency_title_fiat, viewModel.uiState.value.titleRes)
         assertEquals(CurrencyListType.FIAT, viewModel.uiState.value.selectedDataset)
     }
 
@@ -95,7 +96,7 @@ class CurrencyListViewModelTest {
         )
 
         assertEquals(CurrencyListType.ALL, viewModel.uiState.value.selectedDataset)
-        assertEquals("Purchasable Currency", viewModel.uiState.value.title)
+        assertEquals(R.string.currency_title_all, viewModel.uiState.value.titleRes)
     }
 
     @Test
@@ -107,7 +108,7 @@ class CurrencyListViewModelTest {
         )
 
         assertEquals(CurrencyListType.FIAT, viewModel.uiState.value.selectedDataset)
-        assertEquals("Fiat Currency", viewModel.uiState.value.title)
+        assertEquals(R.string.currency_title_fiat, viewModel.uiState.value.titleRes)
     }
 
     @Test
@@ -169,7 +170,7 @@ class CurrencyListViewModelTest {
         )
 
         assertEquals(CurrencyListType.CRYPTO, viewModel.uiState.value.selectedDataset)
-        assertEquals("Crypto Currency", viewModel.uiState.value.title)
+        assertEquals(R.string.currency_title_crypto, viewModel.uiState.value.titleRes)
     }
 
     @Test

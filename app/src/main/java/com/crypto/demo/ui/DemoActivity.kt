@@ -1,7 +1,6 @@
 package com.crypto.demo.ui
 
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -37,7 +36,6 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         enableEdgeToEdge()
         binding = ActivityDemoBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -93,7 +91,11 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
         }
 
         state.message?.let { message ->
-            Snackbar.make(controlPanelCard, message.text, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(
+                controlPanelCard,
+                messageText(message.type),
+                Snackbar.LENGTH_SHORT
+            ).show()
             viewModel.onMessageConsumed()
         }
     }
@@ -120,8 +122,9 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
     private fun applyRootInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.demoRoot) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            binding.demoContainer.setPadding(0, systemBars.top, 0, systemBars.bottom)
-            insets
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            binding.demoContainer.setPadding(0, systemBars.top, 0, imeInsets.bottom)
+            WindowInsetsCompat.CONSUMED
         }
         ViewCompat.requestApplyInsets(binding.demoRoot)
     }
@@ -130,5 +133,14 @@ class DemoActivity : AppCompatActivity(), CurrencyListFragment.SearchFocusListen
         if (isSearchFocused == hasFocus) return
         isSearchFocused = hasFocus
         binding.controlPanelCard.isGone = hasFocus
+    }
+
+    private fun messageText(type: UiMessageType): String {
+        val stringRes = when (type) {
+            UiMessageType.INITIAL_SEED -> R.string.message_initial_seed
+            UiMessageType.SEED -> R.string.message_seed_success
+            UiMessageType.CLEARED -> R.string.message_clear_success
+        }
+        return getString(stringRes)
     }
 }

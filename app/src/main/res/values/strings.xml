@@ -9,4 +9,10 @@
     <string name="search_hint">Search currency</string>
     <string name="empty_state_message">No currencies match your search.</string>
     <string name="currency_subtitle_format">%1$s - %2$s</string>
+    <string name="currency_title_crypto">Crypto Currency</string>
+    <string name="currency_title_fiat">Fiat Currency</string>
+    <string name="currency_title_all">Purchasable Currency</string>
+    <string name="message_initial_seed">Initial dataset loaded</string>
+    <string name="message_seed_success">Demo data inserted</string>
+    <string name="message_clear_success">Local database cleared</string>
 </resources>

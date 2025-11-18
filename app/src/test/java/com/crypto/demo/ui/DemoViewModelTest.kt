@@ -32,7 +32,7 @@ class DemoViewModelTest {
         advanceUntilIdle()
 
         assertEquals(SampleCurrencyData.allPurchasable.size, repository.lastSeed?.size)
-        assertEquals("Initial dataset loaded", viewModel.uiState.value.message?.text)
+        assertEquals(UiMessageType.INITIAL_SEED, viewModel.uiState.value.message?.type)
     }
 
     @Test
@@ -46,7 +46,7 @@ class DemoViewModelTest {
 
         val message = requireNotNull(viewModel.uiState.value.message)
         assertEquals(SampleCurrencyData.allPurchasable.size, repository.lastSeed?.size)
-        assertTrue(message.text.contains("Demo data"))
+        assertEquals(UiMessageType.SEED, message.type)
         assertTrue(!viewModel.uiState.value.isProcessing)
     }
 
@@ -61,7 +61,7 @@ class DemoViewModelTest {
 
         val message = requireNotNull(viewModel.uiState.value.message)
         assertEquals(1, repository.clearCount)
-        assertTrue(message.text.contains("cleared"))
+        assertEquals(UiMessageType.CLEARED, message.type)
         assertTrue(!viewModel.uiState.value.isProcessing)
     }
 
